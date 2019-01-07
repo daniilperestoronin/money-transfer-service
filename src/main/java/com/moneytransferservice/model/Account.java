@@ -7,9 +7,9 @@ import java.util.UUID;
 
 public class Account {
 
-    private UUID uuid;
-    private String name;
-    private Money money;
+    private volatile UUID uuid;
+    private volatile String name;
+    private volatile Money money;
 
     public UUID getId() {
         return uuid;
