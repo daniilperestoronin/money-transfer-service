@@ -3,6 +3,8 @@ package com.moneytransferservice;
 import com.moneytransferservice.model.Account;
 import com.moneytransferservice.model.Transfer;
 import com.moneytransferservice.repository.Repository;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
@@ -17,7 +19,7 @@ import java.util.UUID;
 public class Application extends AbstractVerticle {
 
     private static final int DEFAULT_PORT = 8080;
-    private static final String CONTENT_TYPE_HEADER = "Content-Type";
+    private static final String CONTENT_TYPE_HEADER = HttpHeaderNames.CONTENT_TYPE.toString();
     private static final String APPLICATION_JSON = "application/json; charset=utf-8";
     private final Repository<Account> accountRepository;
     private final Repository<Transfer> transferRepository;
@@ -69,12 +71,12 @@ public class Application extends AbstractVerticle {
             final var account = Json.decodeValue(context.getBodyAsString(), Account.class);
             UUID uuid = accountRepository.create(account);
             context.response()
-                    .setStatusCode(201)
+                    .setStatusCode(HttpResponseStatus.CREATED.code())
                     .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON)
                     .end(uuid.toString());
         } catch (IllegalArgumentException e) {
             context.response()
-                    .setStatusCode(400)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                     .end();
         }
     }
@@ -82,7 +84,7 @@ public class Application extends AbstractVerticle {
     private void readAllAccounts(final RoutingContext context) {
         accountRepository.readAll().ifPresent(accounts ->
                 context.response()
-                        .setStatusCode(200)
+                        .setStatusCode(HttpResponseStatus.OK.code())
                         .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON)
                         .end(Json.encode(accounts)));
     }
@@ -92,15 +94,15 @@ public class Application extends AbstractVerticle {
             final var uuid = UUID.fromString(context.request().getParam("uuid"));
             accountRepository.read(uuid).ifPresent(account ->
                     context.response()
-                            .setStatusCode(200)
+                            .setStatusCode(HttpResponseStatus.OK.code())
                             .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON)
                             .end(Json.encode(account)));
             context.response()
-                    .setStatusCode(404)
+                    .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
                     .end();
         } catch (IllegalArgumentException e) {
             context.response()
-                    .setStatusCode(400)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                     .end();
         }
     }
@@ -110,11 +112,11 @@ public class Application extends AbstractVerticle {
             final var account = Json.decodeValue(context.getBodyAsString(), Account.class);
             accountRepository.update(account.getId(), account);
             context.response()
-                    .setStatusCode(200)
+                    .setStatusCode(HttpResponseStatus.OK.code())
                     .end();
         } catch (IllegalArgumentException e) {
             context.response()
-                    .setStatusCode(400)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                     .end();
         }
     }
@@ -124,11 +126,11 @@ public class Application extends AbstractVerticle {
             final var uuid = UUID.fromString(Objects.requireNonNull(context.request().getParam("uuid")));
             accountRepository.delete(uuid);
             context.response()
-                    .setStatusCode(200)
+                    .setStatusCode(HttpResponseStatus.OK.code())
                     .end();
         } catch (IllegalArgumentException e) {
             context.response()
-                    .setStatusCode(400)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                     .end();
         }
     }
@@ -140,30 +142,30 @@ public class Application extends AbstractVerticle {
             final var toAccountOptional = accountRepository.read(transfer.getToAccount());
             if (!fromAccountOptional.isPresent()) {
                 context.response()
-                        .setStatusCode(400)
+                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                         .end("The account from which the transition is made does not exist");
             }
             if (!toAccountOptional.isPresent()) {
                 context.response()
-                        .setStatusCode(400)
+                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                         .end("The account to which the transition is made does not exist");
             }
             final var fromAccount = fromAccountOptional.get();
             final var toAccount = toAccountOptional.get();
             if (!fromAccount.checkMoneyAvailability(transfer.getAmount())) {
                 context.response()
-                        .setStatusCode(400)
+                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                         .end("Invalid transfer amount specified");
             }
             fromAccount.withdrawMoney(transfer.getAmount());
             toAccount.acceptMoney(transfer.getAmount());
             UUID transferUuid = transferRepository.create(transfer);
             context.response()
-                    .setStatusCode(200)
+                    .setStatusCode(HttpResponseStatus.OK.code())
                     .end(transferUuid.toString());
         } catch (IllegalArgumentException e) {
             context.response()
-                    .setStatusCode(400)
+                    .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                     .end();
         }
     }
