@@ -70,6 +70,7 @@ public class Application extends AbstractVerticle {
         try {
             final var account = Json.decodeValue(context.getBodyAsString(), Account.class);
             UUID uuid = accountRepository.create(account);
+            account.setId(uuid);
             context.response()
                     .setStatusCode(HttpResponseStatus.CREATED.code())
                     .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON)
@@ -92,14 +93,18 @@ public class Application extends AbstractVerticle {
     private void readAccount(final RoutingContext context) {
         try {
             final var uuid = UUID.fromString(context.request().getParam("uuid"));
-            accountRepository.read(uuid).ifPresent(account ->
-                    context.response()
-                            .setStatusCode(HttpResponseStatus.OK.code())
-                            .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON)
-                            .end(Json.encode(account)));
-            context.response()
-                    .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
-                    .end();
+            final var accountOptional = accountRepository.read(uuid);
+            if (accountOptional.isPresent()) {
+                final var account = accountOptional.get();
+                context.response()
+                        .setStatusCode(HttpResponseStatus.OK.code())
+                        .putHeader(CONTENT_TYPE_HEADER, APPLICATION_JSON)
+                        .end(Json.encode(account));
+            } else {
+                context.response()
+                        .setStatusCode(HttpResponseStatus.NOT_FOUND.code())
+                        .end();
+            }
         } catch (IllegalArgumentException e) {
             context.response()
                     .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())

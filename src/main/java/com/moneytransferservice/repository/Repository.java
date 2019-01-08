@@ -14,7 +14,7 @@ public class Repository<V> {
     }
 
     public Optional<V> read(UUID uuid) {
-        return Optional.of(mapRepository.get(uuid));
+        return Optional.ofNullable(mapRepository.get(uuid));
     }
 
     public Optional<List<V>> readAll() {
