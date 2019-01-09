@@ -38,7 +38,6 @@ public class Application extends AbstractVerticle {
     @Override
     public void start(final Future<Void> future) {
         Json.mapper.registerModule(new MoneyModule());
-
         final var router = getRouter();
         vertx.createHttpServer()
                 .requestHandler(router)
@@ -149,11 +148,13 @@ public class Application extends AbstractVerticle {
                 context.response()
                         .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                         .end("The account from which the transition is made does not exist");
+                return;
             }
             if (!toAccountOptional.isPresent()) {
                 context.response()
                         .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                         .end("The account to which the transition is made does not exist");
+                return;
             }
             final var fromAccount = fromAccountOptional.get();
             final var toAccount = toAccountOptional.get();
@@ -161,6 +162,7 @@ public class Application extends AbstractVerticle {
                 context.response()
                         .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                         .end("Invalid transfer amount specified");
+                return;
             }
             fromAccount.withdrawMoney(transfer.getAmount());
             toAccount.acceptMoney(transfer.getAmount());
