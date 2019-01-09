@@ -148,7 +148,7 @@ class ApplicationTest {
                                 .as(BodyCodec.json(Account.class))
                                 .send(testContext.succeeding(resp ->
                                         testContext.verify(() -> {
-                                            assertThat(resp.statusCode()).isEqualTo(200);
+                                            assertThat(resp.statusCode()).isEqualTo(204);
                                             assertThat(testAccountRepository
                                                     .read(testAccount.getId()).isPresent())
                                                     .isFalse();

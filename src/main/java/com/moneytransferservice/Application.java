@@ -24,7 +24,7 @@ public class Application extends AbstractVerticle {
     private final Repository<Account> accountRepository;
     private final Repository<Transfer> transferRepository;
 
-    Application() {
+    public Application() {
         this.accountRepository = new Repository<>();
         this.transferRepository = new Repository<>();
     }
@@ -131,7 +131,7 @@ public class Application extends AbstractVerticle {
             final var uuid = UUID.fromString(Objects.requireNonNull(context.request().getParam("uuid")));
             accountRepository.delete(uuid);
             context.response()
-                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
                     .end();
         } catch (IllegalArgumentException e) {
             context.response()

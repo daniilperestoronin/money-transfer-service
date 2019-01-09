@@ -8,6 +8,7 @@ for money transfers between accounts.
 * [Java 11](https://www.oracle.com/technetwork/java/javase/downloads/index.html)
 * [Maven](https://maven.apache.org/)
 * [Vert.x](https://vertx.io/)
+* [JavaMoney](http://javamoney.github.io/)
 * [JUnit 5](https://junit.org/junit5/)
 
 ### Building
@@ -15,9 +16,16 @@ for money transfers between accounts.
 mvn clean package
 ```
 ### Running the tests
+
+#### Unit tests
 ```
-mvn test
+mvn clean test
 ```
+#### Integration tests
+```
+mvn clean verify
+```
+
 ### Deployment
 ```
 java -jar money-transfer-service-0.0.1.jar
