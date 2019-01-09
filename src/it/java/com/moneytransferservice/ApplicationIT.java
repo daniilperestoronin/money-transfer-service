@@ -42,7 +42,7 @@ class ApplicationIT {
     }
 
     @Test
-    @DisplayName("Test Account Rest Api")
+    @DisplayName("Test account RESTfull API")
     void testAccountRestApi() {
         final var uuidString = given()
                 .body(testAccount)
@@ -63,7 +63,7 @@ class ApplicationIT {
     }
 
     @Test
-    @DisplayName("Test Transfer commit")
+    @DisplayName("Test money transfer commit")
     void testTransferCommit() {
         final var uuidString = given()
                 .body(testAccount)
@@ -95,4 +95,41 @@ class ApplicationIT {
                 .getMoney()).
                 isEqualTo(testAccount2.getMoney().subtract(amountMoney));
     }
+
+    @Test
+    @DisplayName("Test negative scenarios for transfer money")
+    void testWrongTransferCommit() {
+        final var uuidString = given()
+                .body(testAccount)
+                .request().post("/account/")
+                .thenReturn().asString();
+        testAccount.setId(UUID.fromString(uuidString));
+        final var uuidString2 = given()
+                .body(testAccount2)
+                .request().post("/account/")
+                .thenReturn().asString();
+        testAccount2.setId(UUID.fromString(uuidString2));
+        final var amountMoney = Money.of(50000, "USD");
+        final var exceedingTransfer = new Transfer()
+                .setToAccount(testAccount.getId())
+                .setFromAccount(testAccount2.getId())
+                .setAmount(amountMoney);
+        given().body(exceedingTransfer).request().post("/transfer/commit").then()
+                .assertThat().statusCode(400);
+
+        final var toNotExistAccountTransfer = new Transfer()
+                .setToAccount(UUID.randomUUID())
+                .setFromAccount(testAccount2.getId())
+                .setAmount(amountMoney);
+        given().body(toNotExistAccountTransfer).request().post("/transfer/commit").then()
+                .assertThat().statusCode(400);
+
+        final var fromNotExistAccountTransfer = new Transfer()
+                .setToAccount(testAccount2.getId())
+                .setFromAccount(UUID.randomUUID())
+                .setAmount(amountMoney);
+        given().body(fromNotExistAccountTransfer).request().post("/transfer/commit").then()
+                .assertThat().statusCode(400);
+    }
+
 }
