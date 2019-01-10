@@ -179,7 +179,7 @@ class ApplicationTest {
 
     @Test
     @DisplayName("Test committing a money transfer to a non-existent account")
-    void testWrongTransfer2(Vertx vertx, VertxTestContext testContext) {
+    void testCommitTransferToNonExistAccount(Vertx vertx, VertxTestContext testContext) {
         final var amountMoney = Money.of(100, "USD");
         final var transfer = new Transfer()
                 .setToAccount(UUID.randomUUID())
@@ -200,7 +200,7 @@ class ApplicationTest {
 
     @Test
     @DisplayName("Test committing a money transfer from a non-existent account")
-    void testWrongTransfer3(Vertx vertx, VertxTestContext testContext) {
+    void testCommitTransferFromNonExistAccount(Vertx vertx, VertxTestContext testContext) {
         final var amountMoney = Money.of(100, "USD");
         final var transfer = new Transfer()
                 .setToAccount(testAccount.getId())
@@ -220,8 +220,29 @@ class ApplicationTest {
     }
 
     @Test
+    @DisplayName("Test committing a money transfer with wrong currency")
+    void testCommitTransferWithWrongCurrency(Vertx vertx, VertxTestContext testContext) {
+        final var amountMoney = Money.of(100, "EUR");
+        final var transfer = new Transfer()
+                .setToAccount(testAccount.getId())
+                .setFromAccount(UUID.randomUUID())
+                .setAmount(amountMoney);
+
+        WebClient webClient = WebClient.create(vertx);
+        vertx.deployVerticle(new Application(testAccountRepository, testTransferRepository),
+                testContext.succeeding(id ->
+                        webClient.post(8080, "localhost", "/transfer/commit")
+                                .as(BodyCodec.string())
+                                .sendJson(transfer, testContext.succeeding(trResp ->
+                                        testContext.verify(() -> {
+                                            assertThat(trResp.statusCode()).isEqualTo(400);
+                                            testContext.completeNow();
+                                        })))));
+    }
+
+    @Test
     @DisplayName("Test committing money transfer")
-    void testTransfer(Vertx vertx, VertxTestContext testContext) {
+    void testMoneyTransfer(Vertx vertx, VertxTestContext testContext) {
         final var amountMoney = Money.of(100, "USD");
         final var withdrawAccountMoney = testAccount.getMoney().subtract(amountMoney);
         final var addAccountMoney = testAccount2.getMoney().add(amountMoney);

@@ -158,6 +158,13 @@ public class Application extends AbstractVerticle {
             }
             final var fromAccount = fromAccountOptional.get();
             final var toAccount = toAccountOptional.get();
+            if (!fromAccount.getMoney().getCurrency().equals(transfer.getAmount().getCurrency())
+                    || !toAccount.getMoney().getCurrency().equals(transfer.getAmount().getCurrency())) {
+                context.response()
+                        .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
+                        .end("Invalid transfer сurrency specified");
+                return;
+            }
             if (!fromAccount.checkMoneyAvailability(transfer.getAmount())) {
                 context.response()
                         .setStatusCode(HttpResponseStatus.BAD_REQUEST.code())

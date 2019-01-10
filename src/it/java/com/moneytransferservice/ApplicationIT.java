@@ -97,7 +97,7 @@ class ApplicationIT {
     }
 
     @Test
-    @DisplayName("Test negative scenarios for transfer money")
+    @DisplayName("Test negative scenarios for money transfer")
     void testWrongTransferCommit() {
         final var uuidString = given()
                 .body(testAccount)
@@ -129,6 +129,13 @@ class ApplicationIT {
                 .setFromAccount(UUID.randomUUID())
                 .setAmount(amountMoney);
         given().body(fromNotExistAccountTransfer).request().post("/transfer/commit").then()
+                .assertThat().statusCode(400);
+
+        final var withWrongCurrencyTransfer = new Transfer()
+                .setToAccount(testAccount.getId())
+                .setFromAccount(testAccount.getId())
+                .setAmount(Money.of(50000, "EUR"));
+        given().body(withWrongCurrencyTransfer).request().post("/transfer/commit").then()
                 .assertThat().statusCode(400);
     }
 
